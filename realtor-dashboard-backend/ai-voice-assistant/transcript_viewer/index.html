@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aiva-Ai</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-title {
+            font-size: 8rem;
+            font-weight: 200;
+            color: #ffffff;
+            letter-spacing: -2px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .audio-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
+            margin-bottom: 2rem;
+        }
+
+        .audio-visualizer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 1px;
+            height: 100px;
+            width: 600px;
+        }
+
+        .bar {
+            width: 2px;
+            background: #ffffff;
+            transition: height 0.1s ease-out;
+            min-height: 1px;
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: #ffffff;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .transcript-section {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(20, 20, 20, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .transcript-content {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .ai-message {
+            background: rgba(100, 200, 255, 0.1);
+            border-left: 3px solid #64c8ff;
+        }
+
+        .human-message {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #ffffff;
+        }
+
+        .loading-message {
+            background: rgba(255, 165, 0, 0.1);
+            border-left: 3px solid #ffa500;
+            font-style: italic;
+        }
+
+        .speaker-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .message-text {
+            font-size: 1rem;
+            line-height: 1.4;
+            font-weight: 300;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: "";
+            animation: dots 2s infinite;
+        }
+
+        .tech-term {
+            background: rgba(255, 255, 0, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .call-summary {
+            background: rgba(40, 40, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .slogan {
+            font-size: 1.4rem;
+            font-weight: 400;
+            background: linear-gradient(135deg, #64c8ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-top: -1rem;
+            margin-bottom: 2.5rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 5px rgba(100, 200, 255, 0.3));
+            }
+            to {
+                filter: drop-shadow(0 0 15px rgba(100, 200, 255, 0.6));
+            }
+        }
+
+        .call-ended {
+            color: #ff6b6b;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .json-data {
+            color: #a8e6cf;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        @keyframes dots {
+            0% { content: ""; }
+            25% { content: "."; }
+            50% { content: ".."; }
+            75% { content: "..."; }
+            100% { content: ""; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-title">Aiva-Ai</div>
+    <div class="slogan">Never miss a call again</div>
+    
+    <div class="audio-container">
+        <div class="audio-visualizer" id="visualizer"></div>
+    </div>
+    
+    <div class="subtitle">real-time conversation</div>
+
+    <div class="transcript-section">
+        <div class="transcript-content" id="transcript"></div>
+    </div>
+
+    <script>
+        // Create audio bars
+        const visualizer = document.getElementById('visualizer');
+        const transcript = document.getElementById('transcript');
+        const barCount = 200;
+        const bars = [];
+        let isActive = false;
+        let loadingMessageId = null;
+        let isFirstAIResponse = true;
+        
+        for (let i = 0; i < barCount; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            visualizer.appendChild(bar);
+            bars.push(bar);
+        }
+
+        // Waveform animation
+        function animateWaveform() {
+            const time = Date.now() * 0.003;
+            const centerIndex = Math.floor(barCount / 2);
+            
+            bars.forEach((bar, index) => {
+                let height = 1;
+                
+                if (isActive) {
+                    const distanceFromCenter = Math.abs(index - centerIndex);
+                    const normalizedDistance = distanceFromCenter / centerIndex;
+                    const lowFreq = Math.sin(time * 2 + index * 0.1) * 0.4;
+                    const midFreq = Math.sin(time * 4 + index * 0.05) * 0.3;
+                    const highFreq = Math.sin(time * 8 + index * 0.02) * 0.2;
+                    const randomComponent = (Math.random() - 0.5) * 0.3;
+                    let amplitude = lowFreq + midFreq + highFreq + randomComponent;
+                    amplitude *= Math.exp(-normalizedDistance * 1.5);
+                    const speakingIntensity = Math.sin(time * 1.5) * 0.5 + 0.5;
+                    amplitude *= speakingIntensity;
+                    height = Math.max(2, Math.abs(amplitude) * 80 + 10);
+                } else {
+                    const ambientWave = Math.sin(time * 0.5 + index * 0.3) * 0.1;
+                    height = Math.max(1, Math.abs(ambientWave) * 15 + 2);
+                }
+                
+                bar.style.height = height + 'px';
+            });
+            
+            requestAnimationFrame(animateWaveform);
+        }
+
+        
+
+        function showCallSummary(extractedData) {
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'call-summary';
+            summaryDiv.innerHTML = `
+                <div class="call-ended">-- Call Ended --</div>
+                <div class="json-data">${JSON.stringify(extractedData, null, 2)}</div>
+            `;
+            
+            transcript.appendChild(summaryDiv);
+            transcript.scrollTop = transcript.scrollHeight;
+        }
+
+        function highlightTechTerms(text) {
+            const techTerms = [
+                // General spectroscopy terms
+                'spectrometer', 'spectrometers', 'spectroscopy', 'spectrum', 'spectral',
+                'wavelength', 'wavelengths', 'detector', 'detectors', 'pixel', 'pixels',
+                'signal-to-noise', 'SNR', 'stray light', 'dynamic range', 'integration',
+                'calibration', 'resolution', 'sensitivity', 'bit depth',
+                
+                // Applications
+                'LIBS', 'spectroradiometry', 'NIST', 'traceable', 'measurements',
+                'chemical analysis', 'lab applications', 'field work', 'portable',
+                
+                // SPECTRUM-Pro specific
+                'SPECTRUM-Pro', 'spectrum-pro', 'spectrum pro', 'stellarnet',
+                'miniature spectrometer', 'compact spectrometer',
+                
+                // Technical specs
+                'slit size', 'spectrograph', 'Czerny-Turner', 'crossed',
+                'integration time', 'rapid measurements', 'dimensions',
+                'detector specifications', 'CCD', 'CMOS',
+                
+                // Research terms
+                'research', 'university', 'lab', 'laboratory', 'compliance',
+                'specifications', 'demo', 'quote', 'application'
+            ];
+            
+            let highlightedText = text;
+            techTerms.forEach(term => {
+                const regex = new RegExp(`\\b${term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'gi');
+                highlightedText = highlightedText.replace(regex, `<span class="tech-term">$&</span>`);
+            });
+            return highlightedText;
+        }
+
+        // Show loading message
+        function showLoadingMessage() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message loading-message';
+            messageDiv.id = 'loading-message';
+            messageDiv.innerHTML = `
+               <div class="speaker-label">AI Agent</div>
+               <div class="message-text">Accessing knowledge base<span class="loading-dots"></span></div>
+            `;
+            
+            transcript.appendChild(messageDiv);
+            transcript.scrollTop = transcript.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        // Remove loading message
+        function removeLoadingMessage() {
+            const loadingMsg = document.getElementById('loading-message');
+            if (loadingMsg) {
+                loadingMsg.remove();
+            }
+        }
+
+        // Add message to transcript
+        function addMessage(speaker, text) {
+            // If this is an AI response and we have a loading message, remove it
+            if (speaker === 'ai' && document.getElementById('loading-message')) {
+                removeLoadingMessage();
+            }
+
+            const messageDiv = document.createElement('div');
+            const messageClass = speaker === 'ai' ? 'ai-message' : 'human-message';
+            const speakerLabel = speaker === 'ai' ? 'AI Agent' : 'Human';
+            
+            messageDiv.className = `message ${messageClass}`;
+            messageDiv.innerHTML = `
+                <div class="speaker-label">${speakerLabel}</div>
+                <div class="message-text">${speaker === 'human' ? highlightTechTerms(text) : text}</div>
+            `;
+            
+            transcript.appendChild(messageDiv);
+            transcript.scrollTop = transcript.scrollHeight;
+            
+            // Activate waveform
+            isActive = true;
+            setTimeout(() => {
+                isActive = false;
+            }, text.length * 60);
+
+            // After first human message, show loading for AI response
+            if (speaker === 'human' && isFirstAIResponse) {
+                setTimeout(() => {
+                    showLoadingMessage();
+                    isFirstAIResponse = false;
+                }, 500); // Small delay to feel natural
+            }
+        }
+
+        // WebSocket connection to receive real-time transcript
+        // WebSocket connection with auto-reconnect
+        let ws;
+        let reconnectInterval = 1000;
+
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:3001');
+            
+            ws.onopen = function() {
+                console.log('Connected to demo server');
+                reconnectInterval = 1000; // Reset on successful connection
+            };
+            
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                if (message.type === 'call_summary') {
+                    showCallSummary(message.data);
+                } else {
+                    addMessage(message.speaker, message.text);
+                }
+            };
+            
+            ws.onclose = function() {
+                console.log('Disconnected from demo server, retrying...');
+                setTimeout(connectWebSocket, reconnectInterval);
+                reconnectInterval = Math.min(reconnectInterval * 1.5, 30000); // Max 30 seconds
+            };
+            
+            ws.onerror = function(error) {
+                console.log('WebSocket error:', error);
+            };
+        }
+
+        // Start connection
+        connectWebSocket();
+
+        // Start animation
+        animateWaveform();
+
+        // Manual controls for testing
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'a') {
+                addMessage('ai', 'This is a test AI response message.');
+            } else if (e.key === 'h') {
+                addMessage('human', 'This is a test human message.');
+            } else if (e.key === 'l') {
+                showLoadingMessage();
+            } else if (e.key === 'r') {
+                removeLoadingMessage();
+            } else if (e.key === 't') {
+                addMessage('human', 'I need information about your SPECTRUM-Pro spectrometers for LIBS applications.');
+            } else if (e.key === 'y') {
+                addMessage('human', 'What are the detector specifications and signal-to-noise ratio?');
+            } else if (e.key === 's') {
+                // Test call summary with sample extracted data
+                showCallSummary({
+                    "first_name": "Sarah",
+                    "last_name": "Johnson", 
+                    "email": "sarah.johnson@researchlab.edu",
+                    "phone": "617-555-8932",
+                    "company": "University Research Lab",
+                    "reason_for_call": "LIBS applications and NIST-traceable spectroradiometry inquiry for portable spectrometer research"
+                });
+            } else if (e.key === 'c') {
+                // Test call summary via server (simulates real flow)
+                fetch('http://localhost:3001/call-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "first_name": "Dr. Michael",
+                        "last_name": "Chen",
+                        "email": "m.chen@techlab.mit.edu", 
+                        "phone": "415-555-1234",
+                        "company": "MIT Technology Lab",
+                        "reason_for_call": "Requesting demo and specifications for SPECTRUM-Pro models for chemical analysis applications"
+                    })
+                })
+                .then(response => response.json())
+                .then(data => console.log('Call summary sent:', data))
+                .catch(error => console.log('Server not running or error:', error));
+            }
+        });
+    </script>
+</body>
+</html>

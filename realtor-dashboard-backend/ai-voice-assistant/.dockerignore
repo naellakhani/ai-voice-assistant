@@ -1,0 +1,48 @@
+# Inbound-only configuration - exclude outbound components
+lead_automation.py
+
+# Test files
+stellarnet_complete_test*.json
+simple_model_tester.py
+run_tests.py
+test_results/
+test_scripts/
+
+# Development utilities
+token-script.py
+zillow_api.py
+
+# Version control
+.git/
+.gitignore
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+
+# Temporary files
+*.swp
+*.swo
+*.tmp
+.DS_Store
+
+# Logs
+*.log
+
+# Node.js files
+**/node_modules/
+**/package*.json
+**/*.js
+
+# Debug files
+.vscode/
+.idea/
+
+# Credentials (should be mounted at runtime)
+credentials/

@@ -1,0 +1,100 @@
+networks:
+  app_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1500
+
+
+services:
+  app:
+    build: 
+      context: ..
+      dockerfile: docker-deployment/Dockerfile
+    # Change container name if needed to avoid conflicts
+    container_name: inbound-call-app
+    restart: unless-stopped
+    # Change port mapping if 5000 is already in use (e.g., "8000:5000")
+    ports:
+      - "5000:5000"
+    env_file:
+      - ../.env.docker
+    volumes:
+      - ../credentials:/app/credentials
+      - ../:/app # mount the entire directory for development. 
+    depends_on:
+      - db
+      - transcript-viewer
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2.5G
+        reservations:
+          cpus: '0.5'
+          memory: 768M
+    networks:
+      - app_network
+    environment:
+      - DB_HOST=db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  
+  transcript-viewer:
+    build: ../transcript_viewer
+    # Change container name if needed to avoid conflicts
+    container_name: transcript-viewer
+    restart: unless-stopped
+    # Change port mapping if 3001 is already in use (e.g., "3002:3001")
+    ports:
+      - "3001:3001"
+    volumes:
+    - ../transcript_viewer:/app
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  db:
+    image: pgvector/pgvector:pg14
+    # Change container name if needed to avoid conflicts
+    container_name: inbound-call-db
+    restart: unless-stopped
+    environment:
+      # Database credentials - customize these in your .env file
+      POSTGRES_USER: postgres
+      # Set DB_PASSWORD in your .env file, defaults to 'postgres123'
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+      # Change database name if desired (also update DATABASE_URL in .env)
+      POSTGRES_DB: realtor_dashboard
+    # Change port mapping if 5432 is already in use (e.g., "5433:5432")
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1.25G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d realtor_dashboard"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+volumes:
+  postgres_data:
