@@ -23,7 +23,7 @@ services:
       - ../:/app # mount the entire directory for development. 
     depends_on:
       - db
-      - transcript-viewer
+      # - transcript-viewer  # Optional: Uncomment to enable real-time call transcript viewer
     deploy:
       resources:
         limits:
@@ -43,24 +43,26 @@ services:
       retries: 3
       start_period: 20s
   
-  transcript-viewer:
-    build: ../transcript_viewer
-    # Change container name if needed to avoid conflicts
-    container_name: transcript-viewer
-    restart: unless-stopped
-    # Change port mapping if 3001 is already in use (e.g., "3002:3001")
-    ports:
-      - "3001:3001"
-    volumes:
-    - ../transcript_viewer:/app
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+  # Optional: Real-time call transcript viewer
+  # Uncomment the entire block below to enable transcript viewing at http://localhost:3001
+  # transcript-viewer:
+  #   build: ../transcript_viewer
+  #   # Change container name if needed to avoid conflicts
+  #   container_name: transcript-viewer
+  #   restart: unless-stopped
+  #   # Change port mapping if 3001 is already in use (e.g., "3002:3001")
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #   - ../transcript_viewer:/app
+  #   networks:
+  #     - app_network
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 10s
 
   db:
     image: pgvector/pgvector:pg14
