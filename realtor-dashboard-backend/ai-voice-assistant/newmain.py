@@ -116,34 +116,43 @@ def startup_routine(db_url=None, ngrok_url=None):
         init_status_handler(app, state_manager, chat)
         
         # Initialize CRM integrations
-        logger.info("Initializing CRM integrations...")
-        try:
-            from crm_integrations import initialize_crm_integrations
-            crm_success = initialize_crm_integrations()
-            if crm_success:
-                logger.info(" CRM integrations initialized successfully")
-            else:
-                logger.warning(" CRM integrations failed to initialize")
-        except Exception as e:
-            logger.error(f" CRM initialization error: {e}")
-        
-        init_webhook_routes(app, ngrok_public_url)  # Initialize FollowUpBoss webhook routes
+        crm_enabled = os.getenv('CRM_ENABLED', 'false').lower() == 'true'
+        if crm_enabled:
+            logger.info("Initializing CRM integrations...")
+            try:
+                from crm_integrations import initialize_crm_integrations
+                crm_success = initialize_crm_integrations()
+                if crm_success:
+                    logger.info(" CRM integrations initialized successfully")
+                else:
+                    logger.warning(" CRM integrations failed to initialize")
+            except Exception as e:
+                logger.error(f" CRM initialization error: {e}")
+        else:
+            logger.info("CRM integrations disabled (CRM_ENABLED=false)")
+
+        # Initialize CRM webhook routes only if CRM is enabled
+        if crm_enabled:
+            init_webhook_routes(app, ngrok_public_url)  # Initialize FollowUpBoss webhook routes
         
         # Register primary crm webhook
-        try:
-            from crm_integrations.base_crm import get_crm
-            primary_crm = get_crm()  # Gets the primary CRM (whatever was initialized)
-            if primary_crm and primary_crm.supports_webhooks():
-                webhook_url = f"{ngrok_public_url}/webhook/new-lead"
-                webhook_success = primary_crm.register_webhooks(webhook_url)
-                if webhook_success:
-                    logger.info(f"{primary_crm.get_crm_name()} webhooks registered successfully via CRM interface")
+        if crm_enabled:
+            try:
+                from crm_integrations.base_crm import get_crm
+                primary_crm = get_crm()  # Gets the primary CRM (whatever was initialized)
+                if primary_crm and primary_crm.supports_webhooks():
+                    webhook_url = f"{ngrok_public_url}/webhook/new-lead"
+                    webhook_success = primary_crm.register_webhooks(webhook_url)
+                    if webhook_success:
+                        logger.info(f"{primary_crm.get_crm_name()} webhooks registered successfully via CRM interface")
+                    else:
+                        logger.warning(f"Failed to register {primary_crm.get_crm_name()} webhooks")
                 else:
-                    logger.warning(f"Failed to register {primary_crm.get_crm_name()} webhooks")
-            else:
-                logger.warning("Primary CRM not available or doesn't support webhooks")
-        except Exception as e:
-            logger.error(f"Failed to register primary CRM webhooks: {e}")
+                    logger.warning("Primary CRM not available or doesn't support webhooks")
+            except Exception as e:
+                logger.error(f"Failed to register primary CRM webhooks: {e}")
+        else:
+            logger.info("CRM webhook registration skipped (CRM_ENABLED=false)")
         
         # Set up Twilio webhooks
         set_twilio_webhook(twilio_client, ngrok_public_url)
