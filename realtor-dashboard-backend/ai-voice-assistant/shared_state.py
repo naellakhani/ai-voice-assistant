@@ -398,20 +398,3 @@ class SharedState:
                 del self.followupboss_data
                 print("[shared_state] Cleared FollowUpBoss data")
     
-    def set_property_inquiry_info(self, property_info):
-        """Store property inquiry information (agent name and property address)"""
-        with self.lock:
-            self.property_inquiry_info = property_info
-            print(f"[shared_state] Stored property inquiry info: {property_info}")
-
-    def get_property_inquiry_info(self):
-        """Get stored property inquiry information"""
-        with self.lock:
-            return getattr(self, 'property_inquiry_info', None)
-
-    def clear_property_inquiry_info(self):
-        """Clear stored property inquiry information"""
-        with self.lock:
-            if hasattr(self, 'property_inquiry_info'):
-                del self.property_inquiry_info
-                print("[shared_state] Cleared property inquiry info")
