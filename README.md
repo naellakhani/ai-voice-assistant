@@ -11,7 +11,7 @@ The system integrates with popular CRM platforms (FollowUpBoss, HubSpot, Zoho), 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/naellakhani/ai-voice-assistant.git
+git clone https://github.com/naellakhani/aiva.ai.git
 cd ai-voice-assistant
 ```
 
@@ -59,8 +59,6 @@ mkdir credentials
    GOOGLE_APPLICATION_CREDENTIALS_SPEECH=/app/credentials/[your-speech-credentials-file].json
    GOOGLE_APPLICATION_CREDENTIALS_TEXT=/app/credentials/[your-text-credentials-file].json
    ```
-> **Note**: You can use the same JSON file for both speech and text services, or create separate service accounts for each.
-
 ### Step 3: Configure Twilio Credentials
 
 Get your Twilio credentials from the [Twilio Console](https://console.twilio.com/) and add them to your `.env.docker` file:
@@ -68,7 +66,7 @@ Get your Twilio credentials from the [Twilio Console](https://console.twilio.com
 ```
 TWILIO_ACCOUNT_SID=your-account-sid-here
 TWILIO_AUTH_TOKEN=your-auth-token-here
-TWILIO_FROM_NUMBER=+1234567890
+TWILIO_FROM_NUMBER=[YOUR TWILIO NUMBER]
 ```
 
 The Account SID and Auth Token are available on your Twilio dashboard, and the from number is your registered Twilio phone number.
@@ -141,7 +139,7 @@ docker-compose up
 ## How It Works
 
 ### System Initialization
-When the program starts (`newmain.py`), resources are initialized including Gemini AI warmup, prompt pre-formatting, Twilio webhook configuration, and Ngrok tunnel creation.
+Resources are initialized at startup in newmain.py, initialization.py and model_managers.py. The Gemini API is warmed up and prompt is pre-formatted 
 
 ### Inbound Call Flow
 
