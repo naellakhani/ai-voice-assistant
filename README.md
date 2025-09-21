@@ -15,6 +15,13 @@ git clone https://github.com/naellakhani/ai-voice-assistant.git
 cd ai-voice-assistant
 ```
 
+**Important**: Copy the `.env.docker.example` file to `.env.docker` and fill in your configuration values throughout the following steps:
+
+```bash
+cp realtor-dashboard-backend/ai-voice-assistant/.env.docker.example realtor-dashboard-backend/ai-voice-assistant/.env.docker
+```
+**Note**: **Docker Desktop**: Required to run the containerized application
+
 ### Step 2: Set Up Google Credentials
 
 Create a `credentials` folder in the ai-voice-assistant folder and obtain Google service account credentials for both Speech-to-Text and Text-to-Speech services.
@@ -131,4 +138,41 @@ cd realtor-dashboard-backend/ai-voice-assistant/docker-deployment
 docker-compose up
 ```
 
-The application will be available at `http://localhost:5000` and your Ngrok tunnel URL will be displayed in the console.
+## How It Works
+
+### System Initialization
+When the program starts (`newmain.py`), resources are initialized including Gemini AI warmup, prompt pre-formatting, Twilio webhook configuration, and Ngrok tunnel creation.
+
+### Inbound Call Flow
+
+1. **Webhook Trigger**: Twilio receives an inbound call and sends a webhook to `/inbound-call` endpoint
+2. **Route Handling**: `call_routes.py` receives the webhook and calls `handle_inbound_call()` function
+3. **Call Information Processing**: System extracts CallSid, caller number, called number, and formats phone numbers
+4. **Realtor Identification**: System looks up which realtor owns the called Twilio number using `get_realtor_by_phone()`
+5. **Lead Lookup**: System searches for existing lead using caller's phone number via `get_lead_info_by_phone()`
+6. **Lead Management**:
+   - If existing lead found: Marks as returning lead and loads their information
+   - If new caller: Creates new lead record using `create_new_lead()`
+7. **Conversation Setup**: Loads conversation prompt template and sets realtor context in shared state
+8. **TwiML Generation**: Calls `inbound_call()` in `call_handling.py` to generate TwiML response:
+   - Creates `VoiceResponse()` object with `connect.stream()` element
+   - WebSocket URL: `wss://{ngrok_url}/ws/{lead_id}/{call_sid}`
+   - Configures Twilio Media Streams for bidirectional audio
+9. **WebSocket Connection**: Twilio connects to WebSocket endpoint and begins streaming audio chunks
+10. **Real-time Audio Processing**: `websocket_handler.py` manages the live conversation:
+    - **Audio Format Handling**: Processes mulaw-encoded audio chunks at 8kHz sample rate from Twilio
+    - **Audio Chunks**: Receives base64-encoded audio chunks from Twilio Media Streams
+    - **Speech-to-Text**: Audio chunks sent to Google Speech API via `SpeechClientBridge`
+    - **VAD (Voice Activity Detection)**: Monitors silence detection and conversation turns for interrupt handling
+    - **Interrupt Mechanism**: Stops AI speech generation when user begins speaking (voice activity detected)
+    - **Text Processing**: Transcribed text sent to `manage_conversation()` in `conversation_manager.py`
+    - **AI Response**: Gemini AI generates response based on conversation context and lead information
+    - **Text-to-Speech Chunking**: AI response converted to audio chunks using configured TTS provider
+    - **Silence Handling**: Manages pauses and turn-taking in natural conversation flow
+    - **Audio Streaming**: TTS audio chunks streamed back to Twilio via WebSocket for real-time playback
+11. **Call Completion**: When the call ends, the system processes the conversation data:
+    - **Transcript Analysis**: Complete conversation transcript is analyzed using `transcript_analysis.py`
+    - **Data Extraction**: Key information extracted from the conversation (lead preferences, contact details, etc.)
+    - **CRM Sync**: Lead information and call summary automatically synced to configured CRM system
+    - **Call Logging**: Complete call records stored in database for reporting and follow-up
+    - **Email Notifications**: Stakeholders notified of call completion and key insights via SMTP
