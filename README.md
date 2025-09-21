@@ -1,8 +1,10 @@
-# AIVA - AI Voice Agent
+# Aiva.ai
+An AI voice agent that automates inbound and outbound calls, simulating real-like voice speech using text-to-speech models and state-of-the-art LLMs for response generation to user queries. 
 
-## Introduction
+# Why?
+A few months back my dad (a realtor) asked if it was possible to build a real time customer service bot that can improve the frequency of conversation between him and his clients. It ended up as Aiva.ai and overtime it scaled to a few realtors in the GTA using it to decrease speed to lead with instant outbound calls to leads and implemented in spectrometer manufacturing and distribution companeies to handle inbound product inquiries after hours.
 
-AIVA is an AI voice agent that automates inbound and outbound calls, simulating real-like voice speech using text-to-speech models and state-of-the-art LLMs for response generation to user queries. AIVA has been used to handle inbound inquiries for spectrometer companies and decrease speed to lead for real estate agents by gathering lead preferences etc. 
+# Key Features
 
 The system integrates with popular CRM platforms (FollowUpBoss, HubSpot, Zoho), uses Twilio for voice services, and leverages Google's speech recognition along with multiple TTS providers (ElevenLabs, Google, Cartesia) to deliver human-like conversational experiences.
 
