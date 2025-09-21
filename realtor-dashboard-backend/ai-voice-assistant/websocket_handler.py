@@ -214,8 +214,8 @@ def websocket_endpoint(ws, shared_state, state_manager=None):
             shared_state.set_clear_command_sent(False)
 
         shared_state.update_transcript(f"Lead: {text}")
-        send_transcript_to_websocket(ws, shared_state.get_stream_sid(), shared_state.get_transcript())
-        send_transcript_to_server('human', text)
+        # send_transcript_to_websocket(ws, shared_state.get_stream_sid(), shared_state.get_transcript())
+        # send_transcript_to_server('human', text)
         # Send immediate "Okay" acknowledgment
         #if shared_state.is_assistance_mode():
          #   acknowledgments = ["Okay", "Got it", "Noted", "I understand", "Understood", "Alright"]
@@ -228,8 +228,8 @@ def websocket_endpoint(ws, shared_state, state_manager=None):
 
         shared_state.update_transcript(f"AI: {response_text}")
         logger.info(f"AI: {response_text}")
-        send_transcript_to_websocket(ws, shared_state.get_stream_sid(), shared_state.get_transcript())
-        send_transcript_to_server('ai', response_text)
+        # send_transcript_to_websocket(ws, shared_state.get_stream_sid(), shared_state.get_transcript())
+        # send_transcript_to_server('ai', response_text)
         # CRITICAL: Clear interrupt flag before starting new AI response
         print(f"[DEBUG] Clearing interrupt flag before new AI response")
         shared_state.set_interrupt_ai(False)
