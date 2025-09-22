@@ -147,7 +147,7 @@ docker-compose up
 ## How It Works
 
 ### System Initialization
-Resources are initialized at startup in newmain.py, initialization.py and model_managers.py. The Gemini API is warmed up and prompt is pre-formatted 
+Resources are initialized at startup in newmain.py, initialization.py and model_managers.py. The Gemini API is warmed up and prompt is pre-formatted for lower latency. Twilio webhooks are set using ngrok url so twilio can communicate with our program when an event like an inbound call happens. 
 
 ### Inbound Call Flow
 
